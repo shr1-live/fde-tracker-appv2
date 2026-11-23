@@ -816,6 +816,15 @@ select { appearance: none; -webkit-appearance: none; padding-right: 34px; cursor
 .day-section h4 { margin-bottom: var(--s-2); }
 .topics { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
 .topics li::marker { color: var(--accent); }
+.topic-intro { margin: 0 0 var(--s-3); color: var(--text-2); max-width: 70ch; }
+.topic summary { cursor: pointer; padding: 2px 0; color: var(--text); font-weight: 500; }
+.topic summary:hover { color: var(--accent); }
+.topic[open] > summary { font-weight: 600; }
+.topic-body { margin: var(--s-2) 0 var(--s-3); padding: var(--s-3) var(--s-4); background: var(--surface-2); border-left: 3px solid var(--accent); border-radius: var(--r-sm); max-width: 70ch; }
+.topic-body p { margin: 0 0 var(--s-2); }
+.topic-links-h { font-size: var(--fs-sm); font-weight: 600; color: var(--text-2); margin-top: var(--s-3) !important; }
+.topic-links { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.topic-links a { color: var(--accent); text-underline-offset: 3px; }
 .mystatus { border-top: 1px dashed var(--border); padding-top: var(--s-5); }
 .mystatus h4 { margin-bottom: var(--s-3); }
 .mystatus .row { margin-top: var(--s-5); }

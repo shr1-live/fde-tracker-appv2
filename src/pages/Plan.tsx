@@ -7,6 +7,7 @@ import { FormFields } from "../components/FormFields";
 import { Chip } from "../components/Chip";
 import { ProgramHeader } from "../components/ProgramHeader";
 import { Linkified } from "../components/Linkified";
+import { notesFor, noteForTopic } from "../data/studyNotes";
 import { Icon } from "../components/Icon";
 import { EmptyState, ErrorState, PageSkeleton } from "../components/States";
 import { useConfirm } from "../components/Confirm";
@@ -95,7 +96,29 @@ function DayCard({ program, day, mine, member, editing, onSaved, onEdit, onDelet
         <div className="daycard-body">
           <div className="day-section">
             <h4>Topics to cover</h4>
-            <ul className="topics">{lines.map((l, i) => <li key={i}>{l}</li>)}</ul>
+            {notesFor(day.week, day.day)?.intro && <p className="topic-intro">{notesFor(day.week, day.day)?.intro}</p>}
+            <ul className="topics">{lines.map((l, i) => {
+              const n = noteForTopic(day.week, day.day, l);
+              return (
+                <li key={i}>
+                  {n ? (
+                    <details className="topic">
+                      <summary>{l}</summary>
+                      <div className="topic-body">
+                        <p>{n.plain}</p>
+                        <p><b>Example.</b> {n.example}</p>
+                        {n.links.length > 0 && (
+                          <>
+                            <p className="topic-links-h">Read or watch</p>
+                            <ul className="topic-links">{n.links.map((k) => <li key={k.url}><a href={k.url} target="_blank" rel="noopener noreferrer">{k.label}<span className="sr"> (opens in a new tab)</span></a></li>)}</ul>
+                          </>
+                        )}
+                      </div>
+                    </details>
+                  ) : l}
+                </li>
+              );
+            })}</ul>
           </div>
           {day.practical_task && <div className="day-section"><h4>Practical task</h4><p className="prewrap">{day.practical_task}</p></div>}
           {day.resources && <div className="day-section"><h4>Resources</h4><p className="prewrap"><Linkified text={day.resources} /></p></div>}
