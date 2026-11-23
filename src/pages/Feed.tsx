@@ -159,6 +159,7 @@ export default function Feed() {
     setTimeout(() => listRef.current?.querySelector<HTMLElement>("article.post")?.focus({ preventScroll: true }), 0);
   };
   const name = me?.display_name || me?.email?.split("@")[0] || "You";
+  const pname = me?.programs?.find((x) => x.id === pid)?.name;
   const filtered = show !== "all" || q !== "";
   const clear = () => { setSearch(""); setParam({ kind: null, mine: null, q: null }); };
 
@@ -168,7 +169,7 @@ export default function Feed() {
   else if (posts.length === 0) {
     list = filtered
       ? <EmptyState icon="search" title="No posts match" action={<button type="button" className="btn secondary" onClick={clear}>Clear filters</button>}>Try another word, or show all posts.</EmptyState>
-      : <EmptyState icon="rss" title="No posts yet" action={<button type="button" className="btn" onClick={() => composer.current?.focus()}>Write the first post</button>}>Share a useful video, an article, or something you built. Everyone in every program sees it.</EmptyState>;
+      : <EmptyState icon="rss" title="No posts yet" action={<button type="button" className="btn" onClick={() => composer.current?.focus()}>Write the first post</button>}>Share a useful video, an article, or something you built. Only people in this program see it.</EmptyState>;
   } else {
     list = (
       <div ref={listRef} className={"stack posts" + (loading ? " is-loading" : "")} aria-busy={loading}>
@@ -181,8 +182,9 @@ export default function Feed() {
   return (
     <div className="content narrow">
       <header className="page-head feed-head">
-        <h1>Feed</h1>
-        <p className="page-sub">Everyone in this program sees this. Share a useful video or article, or something you built.</p>
+        {pname && <span className="pg-eyebrow">{pname}</span>}
+        <h1>{pname ? `${pname} feed` : "Feed"}</h1>
+        <p className="page-sub">{pname ? `Only people in ${pname} (and the admin) see this feed.` : "Only people in this program see this feed."} Share a useful video or article, or something you built.</p>
       </header>
       <Composer ref={composer} programId={pid} name={name} meId={me?.id} onPending={pendingPost} onPosted={posted} onFailed={failed} />
       <section className="feed-tools" aria-label="Sort and filter posts">
