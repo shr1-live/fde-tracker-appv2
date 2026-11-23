@@ -72,9 +72,10 @@ export default function Programs() {
                 </table>
               </div>
             )}
+          <DemoPanel onChange={() => void load()} />
         </section>
       </div>
-      <div className="pg-pair">
+      <div className="pg-new">
         <form className="panel-accent pg-form" onSubmit={create} aria-labelledby="pc-h" noValidate>
           <h2 id="pc-h" className="pg-h2">New program</h2>
           <div className="pg-form-row"><div className="field"><label htmlFor="pc-name">Name</label><input id="pc-name" maxLength={80} placeholder="e.g. DevOps Training Program" value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!!err || undefined} /></div>
@@ -84,7 +85,6 @@ export default function Programs() {
           <button className="btn block lg" disabled={busy}><Icon name="plus" size={16} />{busy ? "Creating" : "Create program"}</button>
           <p className="meta">After creating, open Manage to invite the program's coordinator.</p>
         </form>
-        <DemoPanel onChange={() => void load()} />
       </div>
     </div>
   );

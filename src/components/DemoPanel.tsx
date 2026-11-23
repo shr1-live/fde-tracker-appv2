@@ -32,23 +32,27 @@ export function DemoPanel({ onChange }: { onChange: () => void }) {
     try { done(await demo.remove(), "Demo data removed."); } catch (e) { toast.error(errText(e)); } finally { setBusy(""); }
   };
   return (
-    <section className="panel-accent demo-panel" aria-labelledby="demo-h">
-      <h2 id="demo-h" className="pg-h2">Demo data</h2>
-      <p className="meta">Fill the app with realistic sample programs, people, daily logs, feed posts and reminders to show it. It is kept apart from real data: programs are marked (Demo), demo people cannot sign in or get email.</p>
-      {st?.loaded ? (
-        <>
-          <p className="demo-state"><Icon name="check" size={16} />Loaded: {st.programs} programs, {st.people} people.</p>
-          <button type="button" className="btn danger" disabled={!!busy} onClick={() => void remove()}><Icon name="trash" size={16} />{busy === "remove" ? "Removing" : "Remove demo data"}</button>
-          <p className="meta">To refresh it from updated sheets, remove it, then load it again with the new files.</p>
-        </>
-      ) : (
-        <>
-          <div className="field"><label htmlFor="demo-report">Program status sheet <span className="hint">optional .xlsx</span></label><input id="demo-report" ref={report} type="file" accept=".xlsx" /></div>
-          <div className="field"><label htmlFor="demo-daily">30-day status sheet <span className="hint">optional .xlsx</span></label><input id="demo-daily" ref={daily} type="file" accept=".xlsx" /></div>
-          <button type="button" className="btn secondary" disabled={!!busy} onClick={() => void load()}><Icon name="spark" size={16} />{busy === "load" ? "Loading" : "Load demo data"}</button>
-          <p className="meta">With the sheets, the demo FDE program gets everyone's real names, plan, day status and daily status from them.</p>
-        </>
-      )}
+    <section className="demo-strip" aria-labelledby="demo-h">
+      <div className="demo-strip-main">
+        <h3 id="demo-h" className="demo-strip-title">Sample data</h3>
+        {st?.loaded ? (
+          <p className="demo-state"><Icon name="check" size={16} />Loaded: {st.programs} programs, {st.people} people. Open a "(Demo)" program to show it.</p>
+        ) : (
+          <p className="meta">Fills the app with sample programs, people, daily logs, feed posts and reminders. Kept apart from real data: programs are marked (Demo), and demo people cannot sign in or get email.</p>
+        )}
+        {!st?.loaded && (
+          <details className="demo-sheets">
+            <summary>Use the training sheets (optional)</summary>
+            <div className="demo-sheets-grid">
+              <div className="field"><label htmlFor="demo-report">Program status sheet <span className="hint">.xlsx</span></label><input id="demo-report" ref={report} type="file" accept=".xlsx" /></div>
+              <div className="field"><label htmlFor="demo-daily">30-day status sheet <span className="hint">.xlsx</span></label><input id="demo-daily" ref={daily} type="file" accept=".xlsx" /></div>
+            </div>
+          </details>
+        )}
+      </div>
+      {st?.loaded
+        ? <button type="button" className="btn danger" disabled={!!busy} onClick={() => void remove()}><Icon name="trash" size={16} />{busy === "remove" ? "Removing" : "Remove sample data"}</button>
+        : <button type="button" className="btn" disabled={!!busy} onClick={() => void load()}><Icon name="spark" size={16} />{busy === "load" ? "Loading" : "Load sample data"}</button>}
     </section>
   );
 }
