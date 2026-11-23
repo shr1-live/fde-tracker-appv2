@@ -33,7 +33,7 @@ export default function Programs() {
   const today = new Date().toISOString().slice(0, 10);
   const next = (list ?? []).map((p) => p.starts_on).filter((d): d is string => !!d && d >= today).sort()[0];
   return (
-    <div className="content">
+    <div className="content wide-page">
       <header className="pg-hero">
         <span className="pg-eyebrow">Admin</span>
         <h1 className="pg-h1">Programs</h1>
@@ -44,8 +44,8 @@ export default function Programs() {
         <div className="stat"><span className="pg-eyebrow muted">People</span><b>{list ? people : "–"}</b></div>
         <div className="stat"><span className="pg-eyebrow muted">Next start</span><b className="stat-text">{next ? fmtDay(next) : "–"}</b></div>
       </section>
-      <div className="pg-split">
-        <section className="pg-split-main" aria-labelledby="pl-h">
+      <div className="pg-main-col">
+        <section className="pg-main" aria-labelledby="pl-h">
           <h2 id="pl-h" className="pg-h2">All programs</h2>
           {loadErr ? <ErrorState title="Could not load programs" message={loadErr} onRetry={() => void load()} />
             : list === null ? <Loading><div className="stack"><CardSkeleton lines={2} /><CardSkeleton lines={2} /></div></Loading>
@@ -73,18 +73,18 @@ export default function Programs() {
               </div>
             )}
         </section>
-        <div className="pg-split-side">
+      </div>
+      <div className="pg-pair">
         <form className="panel-accent pg-form" onSubmit={create} aria-labelledby="pc-h" noValidate>
           <h2 id="pc-h" className="pg-h2">New program</h2>
-          <div className="field"><label htmlFor="pc-name">Name</label><input id="pc-name" maxLength={80} placeholder="e.g. DevOps Training Program" value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!!err || undefined} /></div>
+          <div className="pg-form-row"><div className="field"><label htmlFor="pc-name">Name</label><input id="pc-name" maxLength={80} placeholder="e.g. DevOps Training Program" value={name} onChange={(e) => setName(e.target.value)} aria-invalid={!!err || undefined} /></div>
+          <div className="field"><label htmlFor="pc-start">Start date <span className="hint">optional</span></label><input id="pc-start" type="date" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} /></div></div>
           <div className="field"><label htmlFor="pc-desc">Description <span className="hint">optional</span></label><textarea id="pc-desc" rows={3} maxLength={600} value={description} onChange={(e) => setDescription(e.target.value)} /></div>
-          <div className="field"><label htmlFor="pc-start">Start date <span className="hint">optional</span></label><input id="pc-start" type="date" value={startsOn} onChange={(e) => setStartsOn(e.target.value)} /></div>
           {err && <p className="field-error" role="alert">{err}</p>}
           <button className="btn block lg" disabled={busy}><Icon name="plus" size={16} />{busy ? "Creating" : "Create program"}</button>
           <p className="meta">After creating, open Manage to invite the program's coordinator.</p>
         </form>
         <DemoPanel onChange={() => void load()} />
-        </div>
       </div>
     </div>
   );
