@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState, type KeyboardEvent, type MouseEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import type { Me } from "../../lib/useRole";
 import { ROLE_LABEL } from "../../lib/v3";
 import { usePopover } from "../../lib/usePopover";
@@ -11,6 +11,7 @@ const SEARCH_FROM = 6; // a search box appears once the list is long enough to n
 /** The current program and the person's role in it; opens a list (searchable when long) to switch program. */
 export function ProgramSwitcher({ programs, current, isAdmin, onPick }: { programs: Prog[]; current: Prog; isAdmin: boolean; onPick?: () => void }) {
   const pop = usePopover();
+  const navigate = useNavigate();
   const [q, setQ] = useState("");
   const list = useMemo(() => {
     const t = q.trim().toLowerCase();
@@ -28,7 +29,15 @@ export function ProgramSwitcher({ programs, current, isAdmin, onPick }: { progra
     </>
   );
   if (programs.length < 2 && !isAdmin) return <div className="switcher single" data-tip={current.name}>{face}</div>;
-  const pick = () => { void pop.hide(false); onPick?.(); };
+  // Close the list first and only then go. Closing removes the list's extra history entry with history.back(); if the
+  // link navigated at the same moment, that Back would undo the switch and the person would land on the old program again.
+  const go = (to: string) => async (e: MouseEvent<HTMLAnchorElement>) => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; // a new-tab click keeps its normal behaviour
+    e.preventDefault();
+    await pop.hide(false);
+    onPick?.();
+    navigate(to, { replace: true });
+  };
   // Arrow keys move between the programs in the list.
   const onKey = (e: KeyboardEvent) => {
     if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
@@ -54,7 +63,7 @@ export function ProgramSwitcher({ programs, current, isAdmin, onPick }: { progra
           <p className="overline" id="program-list-label">Your programs</p>
           <div id="program-list" className="switch-list" role="group" aria-labelledby="program-list-label">
             {list.map((p) => (
-              <Link key={p.id} to={`/p/${p.id}`} replace aria-current={p.id === current.id ? "true" : undefined} onClick={pick}>
+              <Link key={p.id} to={`/p/${p.id}`} replace aria-current={p.id === current.id ? "true" : undefined} onClick={go(`/p/${p.id}`)}>
                 <span className="ps-tile sm" aria-hidden="true">{p.name.charAt(0)}</span>
                 <span className="grow ellipsis">{p.name}</span>
                 <span className="ps-role">{ROLE_LABEL[p.role]}</span>
@@ -65,7 +74,7 @@ export function ProgramSwitcher({ programs, current, isAdmin, onPick }: { progra
           </div>
           {isAdmin && (
             <div className="pop-foot">
-              <Link to="/programs" replace onClick={pick} className="pop-link"><Icon name="grid" size={16} />All programs</Link>
+              <Link to="/programs" replace onClick={go("/programs")} className="pop-link"><Icon name="grid" size={16} />All programs</Link>
             </div>
           )}
         </div>

@@ -37,7 +37,7 @@ The web app never talks to the database directly. The Supabase key in the web ap
 
 ## Data model (V3 tables)
 
-Created by migrations `010_programs_v3.sql` to `018_status_notifications.sql` (feed at scale, notifications, per-program feed, timesheets, demo flag, week submitted, FDE plan weeks 1 and 2, status notifications). `app_users` comes from `001_init.sql`. Migrations 002-009 belong to the older tracker features and are kept.
+Created by migrations `010_programs_v3.sql` to `019_devops_plan.sql` (feed at scale, notifications, per-program feed, timesheets, demo flag, week submitted, FDE plan weeks 1 and 2, status notifications, the DevOps plan). `app_users` comes from `001_init.sql`. Migrations 002-009 belong to the older tracker features and are kept.
 
 | Table | Holds |
 |---|---|
@@ -96,4 +96,6 @@ Repeat saves refresh one notification instead of adding more. Anyone above can a
 
 ## Study notes
 
-Each topic of the plan can open a short note (what it is, an example, and "Read or watch" links). The notes are data in the web app (`src/data/studyNotes.ts`, `studyNotes2.ts`) and attach to a plan topic when the words match the plan line, so the Excel-style plan stays the source of truth.
+Each topic of the plan can open a short note (what it is, an example, and "Read or watch" links). The notes are data in the web app and attach to a plan topic when the words match the plan line, so the plan stays the source of truth. There is one set per program track: FDE (`studyNotes.ts`, `studyNotes2.ts`) and DevOps (`src/data/devops/notesW1.ts` to `notesW4.ts`). A program whose name contains "devops" gets the DevOps notes, any other program gets the FDE notes.
+
+The DevOps plan itself is migration `019_devops_plan.sql`: 30 study days (Linux and Bash, Docker, CI/CD with cloud and Terraform, Kubernetes and Helm). A week holds at most 7 days, so the capstone (study days 29 and 30) is week 5. The migration only fills the real program named "Devops"; demo programs and the FDE program are left alone, and the demo DevOps program copies the real plan.
