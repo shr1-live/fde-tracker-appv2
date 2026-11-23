@@ -9,7 +9,7 @@ The product was built by one person (the owner) working with Claude Code and a s
 | Define | Turned the lead's review into requirements | The lead's walkthrough video was in Hindi. It was transcribed locally with Whisper, key frames were pulled with ffmpeg, and the agent wrote the requirements and the contract from the transcript and screenshots. |
 | Design | Planned data, API and screens before code | The `architect` agent split V3 into tickets. The contract [PROGRAMS-V3.md](https://github.com/shr1-live/fde-tracker-apiv2/blob/main/docs/PROGRAMS-V3.md) was written first so the API and web agents built against the same shapes. [DESIGN.md](https://github.com/shr1-live/fde-tracker-appv2/blob/main/DESIGN.md) was written before the restyle (tokens, components, accessibility rules). |
 | Build | Wrote the code in small, reviewable steps | `backend-dev` built migrations 010 and 011, services and endpoints. `frontend-dev` built the pages; `ui-ux-designer` critiqued screenshots. |
-| Test | Wrote and ran tests; drove the browser | `qa-engineer` wrote xUnit tests (264 pass) and ran Playwright + axe checks against a mocked API and the real API. |
+| Test | Wrote and ran tests; drove the browser | `qa-engineer` wrote xUnit tests (274 pass) and ran Playwright + axe checks against a mocked API and the real API. |
 | Review | Read-only review agents before every push | `code-reviewer` and `security-reviewer` read the diff. One review found that a coordinator invite could re-approve a rejected user. |
 | Split | Planned and carried out the move to two repositories | Agents planned the split. Scripts did the history-preserving move (subtree split and renames). The build and tests were run in both repositories to check it. |
 | Document | Wrote README, contract, design system and these docs | `docs-writer` keeps docs in plain English with limits stated. |
@@ -25,6 +25,7 @@ The agents only know what they are given. These files give them the same context
 | [DESIGN.md](https://github.com/shr1-live/fde-tracker-appv2/blob/main/DESIGN.md) | Yes (frontend repository) | The design system. Agents change tokens, not pages, and check contrast against it. |
 | [PROGRAMS-V3.md](https://github.com/shr1-live/fde-tracker-apiv2/blob/main/docs/PROGRAMS-V3.md) | Yes (backend repository) | The API contract. Both the API and web agents build against it, so they agree without seeing each other's code. |
 | `.claude/agents/*.md` | Yes | Ten agent definitions with a narrow job and the tools they may use. |
+| `.claude/commands/*.md` | Yes | Slash commands: `/verify` (build and tests, no claims without output) and `/release-check` (merged? live? API up?). The web repository adds `/notify-review`. |
 | Memory notes | No (local) | Short notes the owner asked to keep: commit account, sheet format, "few big pushes", "finish to working". |
 
 ## Agents
@@ -35,7 +36,7 @@ The agents only know what they are given. These files give them the same context
 | `backend-dev` | API, migrations, tests | Programs, status, reports, Excel, feed at scale (keyset paging, trigger counters) |
 | `frontend-dev` | Web pages and components | Every V3 page, lazy routes, feed features |
 | `ui-ux-designer` | Design and critique from screenshots | DESIGN.md, restyle, empty/error/loading states |
-| `qa-engineer` | xUnit, Playwright + axe, live checks | 264 API tests; 166 mocked browser checks; 106 real-API checks |
+| `qa-engineer` | xUnit, Playwright + axe, live checks | 274 API tests; 166 mocked browser checks; 106 real-API checks |
 | `code-reviewer` | Read-only diff review | Rejected-user finding; small fixes before push |
 | `security-reviewer` | Read-only security review | Auth, IDOR, injection, secrets, CSP checks |
 | `devops` | Vercel and Render setup, live checks | `vercel.json` (frontend repository) and `render.yaml` (backend repository); health and header checks |
@@ -79,3 +80,10 @@ The agents only know what they are given. These files give them the same context
 | 9 | A git login test with prompts turned off ("no prompt") reported that pushing was impossible, because the test also disabled the credential helper. | The real push worked. | Test the real operation, not a proxy for it. |
 
 Items 3, 4, 5, 7, 8 and 9 come from the working sessions and are not all visible in the git history. Items 1, 2 and 6 are visible in commits `c62bbcf`, `58fffc8` and `22558b6` (in the earlier web repo).
+
+| 10 | The live site said "We could not check your access" after a move to a new API address. | Reproduced on a laptop: the same message appeared locally. The API only allowed `localhost`, the page ran on `127.0.0.1`, so the browser blocked every answer. The live service had the same gap: no `CORS_ORIGINS` setting. | `CORS_ORIGINS` is now a documented required setting; the deploy steps list it. |
+| 11 | After adding plan weeks 1 and 2, five old tests failed. They had assumed a five-day plan. | The full run showed 8 failures; each cause was read before any test was changed. | Tests now expect ten days, and a new test checks both weeks. No test was weakened. |
+| 12 | The test project would not build: the API used a newer Npgsql than the test packages. | `dotnet test` stopped with a version error. | The test project pins the same Npgsql version. |
+| 13 | A link check reported most links as broken. | The URL list written on Windows had carriage returns in it. | The check strips them; all 58 links answered 200. |
+
+The week 2 study notes were written by a sub-agent. The owner's side checked them again: topic lines match the training sheet word for word, every link answers 200, and the build passes.

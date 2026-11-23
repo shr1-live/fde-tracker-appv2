@@ -11,7 +11,7 @@ The product lives in two GitHub repositories. Each has its own build, CI and dep
 | Repository | Holds | Deploys to |
 |---|---|---|
 | [`fde-tracker-appv2`](https://github.com/shr1-live/fde-tracker-appv2) (frontend) | React app in `src/`, `DESIGN.md`, `vercel.json` | Vercel project `fde-tracker-green` |
-| [`fde-tracker-apiv2`](https://github.com/shr1-live/fde-tracker-apiv2) (backend) | ASP.NET Core API, `migrations/`, xUnit tests, `render.yaml`, the API contract `docs/PROGRAMS-V3.md` | Render service `fde-tracker-v3-api` |
+| [`fde-tracker-apiv2`](https://github.com/shr1-live/fde-tracker-apiv2) (backend) | ASP.NET Core API, `migrations/`, xUnit tests, `render.yaml`, the API contract `docs/PROGRAMS-V3.md` | Render service `fde-tracker-apiv2` (https://fde-tracker-apiv2.onrender.com) |
 
 The two talk only through the API contract. Change the contract in the backend repository first, then the frontend follows. The product-level docs (product, architecture, AI development, decisions, disclosure) are the same in both repositories; the backend copy is the source. Standards, QA, security and delivery are written per repository.
 
@@ -20,7 +20,7 @@ The two talk only through the API contract. Change the contract in the backend r
 | Part | Technology | Where it runs |
 |---|---|---|
 | Web app (repository `fde-tracker-appv2`) | React 18, Vite, TypeScript | Vercel (free), built with Vite defaults and the root `vercel.json` of that repository |
-| API (repository `fde-tracker-apiv2`) | ASP.NET Core on .NET 10, MVC style, Dapper | Render free web service, Docker, from the root `render.yaml` of that repository (`fde-tracker-v3-api`) |
+| API (repository `fde-tracker-apiv2`) | ASP.NET Core on .NET 10, MVC style, Dapper | Render free web service, Docker, from the root `render.yaml` of that repository (`fde-tracker-apiv2`) |
 | Database | Postgres | Supabase (free) |
 | Sign-in | Supabase Auth (magic link, JWT) | Supabase |
 | Excel | ClosedXML | Inside the API |
@@ -37,7 +37,7 @@ The web app never talks to the database directly. The Supabase key in the web ap
 
 ## Data model (V3 tables)
 
-Created by migrations `010_programs_v3.sql` and `011_feed_scale.sql`. `app_users` comes from `001_init.sql`. Migrations 002-009 belong to the older tracker features and are kept.
+Created by migrations `010_programs_v3.sql` to `018_status_notifications.sql` (feed at scale, notifications, per-program feed, timesheets, demo flag, week submitted, FDE plan weeks 1 and 2, status notifications). `app_users` comes from `001_init.sql`. Migrations 002-009 belong to the older tracker features and are kept.
 
 | Table | Holds |
 |---|---|
@@ -77,8 +77,23 @@ Form values are JSON, but the server checks every key and type against `lp_form_
 ## Limitations
 
 - Render free tier sleeps when idle; the first call is slow.
-- No emails or notifications.
+- Notifications are in the app only (the bell). Email reminders are built but stay off until a Resend key is set on the host.
 - Feed posts take links only, no uploads.
 - Daily reports cover at most 120 days per request.
 - The main web bundle is about 133 kB gzipped; pages are lazy-loaded but the Supabase client is in the main bundle.
 - One admin account; there is no admin hand-over screen.
+
+## Notifications
+
+In-app, one bell per person (`/api/notifications`). A person who fills something in tells the people above them, never the people beside or below:
+
+| What happens | Who is told |
+|---|---|
+| A daily status is saved, a program day is completed, a week of the timesheet is submitted | The program's coordinators and the admin (a coordinator's entries reach the other coordinators and the admin) |
+| A working day passes with no status or hours | The person, at 10:00 company time |
+
+Repeat saves refresh one notification instead of adding more. Anyone above can also read the entries, and a member asking for someone else's gets 403. The test `V18_what_people_fill_in_is_seen_and_announced_up_the_chain...` checks this end to end against a real Postgres.
+
+## Study notes
+
+Each topic of the plan can open a short note (what it is, an example, and "Read or watch" links). The notes are data in the web app (`src/data/studyNotes.ts`, `studyNotes2.ts`) and attach to a plan topic when the words match the plan line, so the Excel-style plan stays the source of truth.
