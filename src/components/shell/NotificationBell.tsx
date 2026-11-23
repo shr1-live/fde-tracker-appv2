@@ -81,7 +81,7 @@ export function NotificationBell() {
               {items.map((n) => (
                 <li key={n.id}>
                   <button type="button" className={"menu-item bell-item" + (n.read ? "" : " unread")} onClick={() => void go(n)}>
-                    <Icon name={n.kind === "week_submitted" ? "check" : "daily"} size={16} />
+                    <Icon name={n.kind === "daily_missed" ? "daily" : "check"} size={16} />
                     <span className="grow"><span className="bell-title">{n.title}</span><span className="meta">{n.body}</span><span className="meta">{ago(n.created_at)}</span></span>
                     {!n.read && <span className="dot" aria-label="Unread" />}
                   </button>
