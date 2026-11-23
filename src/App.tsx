@@ -12,6 +12,8 @@ import { DevPersonaBar } from "./components/DevPersonaBar";
 import { ProgramSwitcher, type Prog } from "./components/shell/ProgramSwitcher";
 import { AccountMenu } from "./components/shell/AccountMenu";
 import { NotificationBell } from "./components/shell/NotificationBell";
+import { BrandSwitch, ViewAsSwitch } from "./components/shell/TopSwitches";
+import { GuideSwitch, GuideTips } from "./components/shell/Guide";
 import { useConfirm } from "./components/Confirm";
 import { PageSkeleton } from "./components/States";
 import { BrandMark } from "./components/BrandMark";
@@ -31,6 +33,7 @@ const Programs = lazy(() => import("./pages/Programs"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const LAST = "fde:program";
+const LANDED = "fde:landed"; // set once per sign-in, in this tab
 const RAIL = "fde:sidebar"; // "rail" or "full"; unset means "decide by screen width"
 const PAGES: [string, string][] = [["feed", "Feed"], ["", "Plan"], ["daily", "Daily status"], ["status", "Program status"], ["reports", "Reports"], ["manage", "Manage"]];
 
@@ -98,10 +101,12 @@ function Shell({ me }: { me: Me }) {
   const current = progs.find((p) => p.id === urlPid) ?? progs.find((p) => p.id === stored) ?? progs[0];
   useEffect(() => { if (current) { try { localStorage.setItem(LAST, current.id); } catch { /* ignore */ } } }, [current]);
   const unseen = useUnseenPosts(me.id, /^\/p\/[^/]+\/feed$/.test(loc.pathname), current?.id);
-  // One sign-in, two portals: the admin (or a program's coordinator) switches between managing and taking part.
-  const manager = isAdmin || current?.role === "coordinator";
-  const adminHref = isAdmin ? "/programs" : current ? `/p/${current.id}/manage` : "/";
-  const inAdmin = loc.pathname === "/programs" || /^\/p\/[^/]+\/manage$/.test(loc.pathname);
+  // The first screen after signing in is always "Choose a program". Links to one exact page (a reminder, a post) still open that page.
+  useEffect(() => {
+    let landed = false;
+    try { landed = sessionStorage.getItem(LANDED) === "1"; sessionStorage.setItem(LANDED, "1"); } catch { /* storage unavailable */ }
+    if (!landed && (loc.pathname === "/programs" || /^\/p\/[^/]+(\/feed)?\/?$/.test(loc.pathname))) navigate("/", { replace: true });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleRail = () => {
     const next = rail ? "full" : "rail";
@@ -177,25 +182,30 @@ function Shell({ me }: { me: Me }) {
         {current && <ProgramSwitcher programs={progs} current={current} isAdmin={isAdmin} />}
         <nav aria-label="Main" className="nav">
           <div className="nav-group">
-            <Item to="/" end icon="home" label="Choose a program" replace={inDrawer} />
-            {isAdmin && <Item to="/programs" icon="grid" label="All programs (admin)" replace={inDrawer} />}
+            <Item to="/" end icon="grid" label="My programs" replace={inDrawer} />
           </div>
           {current && (
             <div className="nav-group" role="group" aria-labelledby="nav-program">
               <p className="nav-section" id="nav-program"><span className="sr">Program: </span>{current.name}</p>
               <Item to={`${base}/feed`} icon="rss" label="Feed" count={unseen} replace={inDrawer} />
-              <Item to={base} end icon="book" label="Plan" replace={inDrawer} />
               <Item to={`${base}/daily`} icon="daily" label="Daily status" replace={inDrawer} />
+              <Item to={base} end icon="book" label="Plan" replace={inDrawer} />
               <Item to={`${base}/status`} icon="status" label="Program status" replace={inDrawer} />
               <Item to={`${base}/reports`} icon="chart" label="Reports" replace={inDrawer} />
               {current.role !== "member" && <Item to={`${base}/manage`} icon="manage" label="Manage and invite" replace={inDrawer} />}
+            </div>
+          )}
+          {isAdmin && (
+            <div className="nav-group" role="group" aria-labelledby="nav-admin">
+              <p className="nav-section" id="nav-admin">Administration</p>
+              <Item to="/programs" icon="layers" label="All programs" replace={inDrawer} />
             </div>
           )}
           {progs.length === 0 && <p className="nav-note">You are not in a program yet. The admin or a coordinator adds you.</p>}
         </nav>
         <div className="side-foot">
           <div className="side-dev"><DevPersonaBar /></div>
-          <AccountMenu name={name} email={user?.email ?? me.email} isAdmin={isAdmin} onSignOut={() => void signOut()} />
+          <AccountMenu name={name} email={me.email} isAdmin={isAdmin} onSignOut={() => { try { sessionStorage.removeItem(LANDED); } catch { /* ignore */ } void signOut(); }} />
         </div>
       </aside>
       {phone && open && <div className="scrim" onClick={() => closeDrawer()} aria-hidden="true" />}
@@ -209,12 +219,9 @@ function Shell({ me }: { me: Me }) {
             <ol>{trail.map((c, i) => <li key={i} aria-current={i === trail.length - 1 ? "page" : undefined}>{c}</li>)}</ol>
           </nav>
           <span className="grow" />
-          {manager && (
-            <div className="seg portal-switch" role="group" aria-label="Portal">
-              <Link to={adminHref} className={"seg-btn" + (inAdmin ? " active" : "")} aria-current={inAdmin ? "page" : undefined}>{isAdmin ? "Admin" : "Coordinator"}<span className="portal-word"> portal</span></Link>
-              <Link to={current ? `${base}/feed` : "/"} className={"seg-btn" + (inAdmin ? "" : " active")} aria-current={inAdmin ? undefined : "page"}>Program<span className="portal-word"> portal</span></Link>
-            </div>
-          )}
+          <ViewAsSwitch />
+          <BrandSwitch />
+          <GuideSwitch />
           <NotificationBell />
         </header>
         <main ref={mainRef} id="main" className="main" tabIndex={-1}>
@@ -235,6 +242,7 @@ function Shell({ me }: { me: Me }) {
             </div>
           </Suspense>
         </main>
+        <GuideTips />
         {phone && (
           <nav className="tabbar" aria-label="Shortcuts">
             <NavLink to={current ? `${base}/feed` : "/"} end className="tab"><span className="tab-icon"><Icon name="home" />{!!unseen && <span className="tab-dot" />}</span><span>Feed{!!unseen && <span className="sr">, {unseen} new posts</span>}</span></NavLink>

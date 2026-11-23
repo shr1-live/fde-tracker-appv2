@@ -9,3 +9,6 @@ obj
 *.tsbuildinfo
 .vercel
 .vite
+
+# Local demo data extracted from the training sheets (real names): never commit
+scripts/.seed-data.json

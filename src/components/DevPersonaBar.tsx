@@ -12,9 +12,9 @@ export function DevPersonaBar() {
   return (
     <div className="devbar" role="group" aria-label="Test account (development only)" title={who}>
       <span className="devtag" aria-hidden="true">Dev</span>
-      <div className="themesw devsw">
-        {names.map((n) => <button key={n} type="button" aria-pressed={active === n} onClick={() => setActive(n)} title={n}>{n.length > 7 ? n.slice(0, 5) + "." : n}</button>)}
-      </div>
+      <select className="devselect" aria-label="Test account" value={active} onChange={(e) => setActive(e.target.value)}>
+        {names.map((n) => <option key={n} value={n}>{n}</option>)}
+      </select>
     </div>
   );
 }

@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { API_URL, apiJson } from "./api";
 import { useStore } from "./store";
 import { useDevPersona } from "./devPersona";
+import { lower, useViewAs, type ViewRole } from "./viewAs";
 
 export type Me = {
   id: string; email: string; role: "member" | "reviewer" | "admin"; access: string; display_name?: string | null;
@@ -52,7 +53,32 @@ export function useRole(who: string): { me: Me | null; ready: boolean } {
 
 /** The role of whoever is signed in right now (or whichever test account is active in a development build). */
 export function useMe(): { me: Me | null; ready: boolean } {
+  const real = useRealMe();
+  const view = useViewAs();
+  const me = useMemo(() => (real.me ? asViewed(real.me, view) : null), [real.me, view]);
+  return { me, ready: real.ready };
+}
+
+/** Your real roles, ignoring "view as" (only the view switch itself needs this). */
+export function useRealMe(): { me: Me | null; ready: boolean } {
   const { user } = useStore();
   const persona = useDevPersona();
   return useRole(persona + "|" + (user?.email ?? ""));
+}
+
+/** The highest role this person really has anywhere: what the "view as" switch can offer. */
+export function topRole(me: Me): ViewRole {
+  if (me.role === "admin") return "admin";
+  return me.programs?.some((p) => p.role === "coordinator") ? "coordinator" : "member";
+}
+
+/** Me as the chosen view shows it: every role lowered to the view (never raised). */
+function asViewed(me: Me, view: ViewRole): Me {
+  if (view === "admin") return me;
+  return {
+    ...me,
+    role: me.role === "admin" ? "member" : me.role,
+    can_manage: view === "coordinator" ? me.programs?.some((p) => p.role !== "member") ?? false : false,
+    programs: me.programs?.map((p) => ({ ...p, role: lower(p.role, view) })),
+  };
 }

@@ -1,4 +1,4 @@
-import { apiBlob, apiJson } from "./api";
+import { apiBlob, apiForm, apiJson } from "./api";
 
 // Programs V3: types and calls. The contract is docs/PROGRAMS-V3.md in the backend repo.
 
@@ -87,12 +87,25 @@ export const timesheet = {
   save: (id: string, week: string, tasks: TimeTask[], submit: boolean) => apiJson<Timesheet>("PUT", `${P(id)}/timesheet/${week}`, { tasks, submit }),
 };
 
-export type Notification = { id: string; kind: "daily_missed"; program_id: string | null; on_date: string | null; title: string; body: string; link: string | null; created_at: string; read: boolean };
+export type Notification = { id: string; kind: "daily_missed" | "week_submitted"; program_id: string | null; on_date: string | null; title: string; body: string; link: string | null; created_at: string; read: boolean };
 
 export const notifications = {
   list: () => apiJson<{ items: Notification[]; unread: number }>("GET", "/api/notifications"),
   read: (id: string) => apiJson<void>("POST", `/api/notifications/${encodeURIComponent(id)}/read`),
   readAll: () => apiJson<void>("POST", "/api/notifications/read-all"),
+};
+
+export type DemoStatus = { loaded: boolean; programs: number; people: number };
+/** Admin only: sample data for demos, kept apart from real data and removable in one go. */
+export const demo = {
+  status: () => apiJson<DemoStatus>("GET", "/api/admin/demo-data"),
+  load: (report?: File, daily?: File) => {
+    const f = new FormData();
+    if (report) f.append("report", report);
+    if (daily) f.append("daily", daily);
+    return apiForm<DemoStatus>("/api/admin/demo-data", f);
+  },
+  remove: () => apiJson<DemoStatus>("DELETE", "/api/admin/demo-data"),
 };
 
 /** Saves a downloaded file in the browser. */

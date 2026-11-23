@@ -44,7 +44,7 @@ const fromApi = (tasks: TimeTask[]): Row[] => tasks.map((t) => ({
 const snapshot = (rows: Row[]) => JSON.stringify(rows.map((r) => [r.title.trim(), Object.entries(r.cells).filter(([, c]) => c.hours.trim() || c.note.trim()).map(([d, c]) => [d, toMinutes(c.hours), c.note.trim()]).sort()]));
 
 /**
- * Daily status as a timesheet. Your own tasks are the rows (add them as you go), the days of the week are the columns,
+ * Daily status as a daily log (a weekly sheet). Your own tasks are the rows (add them as you go), the days of the week are the columns,
  * and every cell takes hours and a short note. Week view to see and fill the whole week; Day view for one day.
  * A reminder link (?date=YYYY-MM-DD) opens the Day view on the missed day.
  */
@@ -59,7 +59,7 @@ export default function DailyStatus() {
   const maxDay = addDays(today, 1);
   const asked = sp.get("date");
   const linked = asked && ISO.test(asked) && asked <= maxDay ? asked : null;
-  const [view, setView] = useState<"week" | "day">(linked ? "day" : "week");
+  const [view, setView] = useState<"week" | "day">(linked && !sp.get("person") ? "day" : "week");
   const [day, setDay] = useState(linked ?? today);
   const [week, setWeek] = useState(mondayOf(linked ?? today));
   const [rows, setRows] = useState<Row[] | null>(null);
@@ -68,7 +68,7 @@ export default function DailyStatus() {
   const [legacy, setLegacy] = useState<Set<string>>(new Set()); // days filled with the old daily form
   const [busy, setBusy] = useState<"" | "save" | "submit">("");
   const [people, setPeople] = useState<Member[]>([]);
-  const [person, setPerson] = useState(""); // "" = me
+  const [person, setPerson] = useState(() => sp.get("person") ?? ""); // "" = me; a "week submitted" notification opens that person's week
   const [loadErr, setLoadErr] = useState("");
 
   const role = program?.my_role;
@@ -80,8 +80,9 @@ export default function DailyStatus() {
 
   useEffect(() => { if (manager && pid) programs.members(pid).then((r) => setPeople(r.members.filter((m) => m.user_id !== me?.id))).catch(() => setPeople([])); }, [manager, pid, me?.id]);
   useEffect(() => { // a reminder link while the page is open
-    if (linked && linked !== day) { setDay(linked); setWeek(mondayOf(linked)); setView("day"); }
-  }, [linked]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (linked && linked !== day) { setDay(linked); setWeek(mondayOf(linked)); setView(sp.get("person") ? "week" : "day"); }
+    if (sp.get("person") && sp.get("person") !== person) setPerson(sp.get("person") ?? "");
+  }, [linked, sp.get("person")]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const load = useCallback(async () => {
     if (!pid || !role || (!fills && !viewing)) return;
@@ -94,7 +95,7 @@ export default function DailyStatus() {
       const r = fromApi(ts.tasks);
       setRows(r); setSaved(snapshot(r)); setSubmittedAt(ts.submitted_at);
       setLegacy(new Set(old.map((o) => o.on_date)));
-    } catch (e) { setLoadErr(errText(e, "Could not load the timesheet.")); }
+    } catch (e) { setLoadErr(errText(e, "Could not load the daily log.")); }
   }, [pid, role, fills, viewing, week]);
   useEffect(() => { void load(); }, [load]);
 
@@ -169,14 +170,14 @@ export default function DailyStatus() {
       const r = fromApi(ts.tasks);
       setRows(r); setSaved(snapshot(r)); setSubmittedAt(ts.submitted_at);
       window.dispatchEvent(new Event("fde:daily-saved")); // the bell drops reminders for days that now have hours
-      toast.success(submit ? `Submitted your timesheet for ${range(week)}.` : "Saved.");
+      toast.success(submit ? `Submitted your week (${range(week)}). Your coordinator has been told.` : "Saved.");
     } catch (e) { toast.error(errText(e)); } finally { setBusy(""); }
   };
 
   const who = viewing ? people.find((p) => p.user_id === viewing)?.name ?? "This person" : "You";
   const header = (
     <ProgramHeader program={program} page="Daily status"
-      intro={readOnly ? `${who}'s timesheet. Only they can change it.` : "Add the tasks you work on, then log hours and a short note for each day. Save as you go; submit the week when it is complete."}
+      intro={readOnly ? `${who}'s daily log. Only they can change it.` : "Add the tasks you work on, then log hours and a short note for each day. Save as you go; submit the week when it is complete."}
       actions={
         <div className="seg ts-views" role="group" aria-label="View">
           <button type="button" aria-pressed={view === "week"} onClick={() => setView("week")}><Icon name="grid" size={16} />Week</button>
@@ -185,7 +186,7 @@ export default function DailyStatus() {
       } />
   );
   if (!fills && people.length === 0) {
-    return <div className="content">{header}<EmptyState icon="users" title="Nobody to show yet">Invite people on Manage; their timesheets show up here.</EmptyState></div>;
+    return <div className="content">{header}<EmptyState icon="users" title="Nobody to show yet">Invite people on Manage; their daily logs show up here.</EmptyState></div>;
   }
 
   const dayHead = (d: string) => (
@@ -221,7 +222,7 @@ export default function DailyStatus() {
   return (
     <div className="content wide-page">
       {header}
-      <section className="card ts-card" aria-label="Timesheet">
+      <section className="card ts-card" aria-label="Daily log">
         <div className="ts-toolbar">
           <div className="ts-nav">
             {view === "week" ? (
@@ -246,9 +247,9 @@ export default function DailyStatus() {
           <div className="ts-tools">
             {manager && (
               <label className="ts-person">
-                <span className="sr">Whose timesheet</span>
+                <span className="sr">Whose daily log</span>
                 <select value={viewing} onChange={async (e) => { if (await leaveOk()) setPerson(e.target.value); }}>
-                  {fills && <option value="">My timesheet</option>}
+                  {fills && <option value="">My daily log</option>}
                   {people.map((p) => <option key={p.user_id} value={p.user_id}>{p.name}</option>)}
                 </select>
               </label>
@@ -270,8 +271,8 @@ export default function DailyStatus() {
           <div className="ts-total-stat"><span className="meta">Week</span>{submittedAt && !dirty ? <Chip tone="ok">Submitted</Chip> : missingCount ? <Chip tone="warn">{missingCount} {missingCount === 1 ? "day" : "days"} missing</Chip> : <Chip tone="none">Draft</Chip>}</div>
         </div>
 
-        {loadErr ? <ErrorState title="Could not load the timesheet" message={loadErr} onRetry={() => void load()} />
-          : !rows ? <div className="ts-loading" role="status">Loading the timesheet</div>
+        {loadErr ? <ErrorState title="Could not load the daily log" message={loadErr} onRetry={() => void load()} />
+          : !rows ? <div className="ts-loading" role="status">Loading the daily log</div>
           : view === "week" ? (
           <div className="ts-scroll" role="region" aria-label={`Week of ${range(week)}`} tabIndex={0}>
             <table className="ts-grid">
@@ -338,7 +339,7 @@ export default function DailyStatus() {
             {dirty ? <span className="meta unsaved"><span className="dot" aria-hidden="true" />Unsaved changes</span> : <span className="meta">{submittedAt ? "Submitted. Changing the week makes it a draft again." : "Tip: type hours as 2, 2.5 or 2:30."}</span>}
             <span className="grow" />
             <button type="button" className="btn secondary" disabled={!!busy || !dirty} onClick={() => void save(false)}>{busy === "save" ? "Saving" : "Save"}</button>
-            <button type="button" className="btn" disabled={!!busy} onClick={() => void save(true)}><Icon name="send" size={16} />{busy === "submit" ? "Submitting" : "Submit weekly timesheet"}</button>
+            <button type="button" className="btn" disabled={!!busy} onClick={() => void save(true)}><Icon name="send" size={16} />{busy === "submit" ? "Submitting" : "Submit week"}</button>
           </div>
         )}
       </section>

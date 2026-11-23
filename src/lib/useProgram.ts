@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { lower, useViewAs } from "./viewAs";
 import { ApiError } from "./api";
 import { programs, type Program } from "./v3";
 
@@ -19,7 +20,9 @@ export function useProgram(id: string | undefined) {
     }
   }, [id]);
   useEffect(() => { setProgram(id ? cache.get(id) ?? null : null); void reload(); }, [id, reload]);
-  return { program, error, reload };
+  const view = useViewAs();
+  const shown = useMemo(() => (program ? { ...program, my_role: lower(program.my_role, view) } : null), [program, view]);
+  return { program: shown, error, reload };
 }
 
 /** Days grouped by week, in order. */

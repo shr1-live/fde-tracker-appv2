@@ -73,7 +73,7 @@ function DayCard({ program, day, mine, member, editing, onSaved, onEdit, onDelet
     catch (e) { toast.error(errText(e)); } finally { setBusy(false); }
   };
   const lines = day.topics_to_cover.split("\n").map((l) => l.replace(/^[\s•\-*]+/, "").trim()).filter(Boolean);
-  const state = mine?.completed ? "done" : mine ? "progress" : "todo";
+  const state = mine?.completed ? "done" : mine ? "inprogress" : "todo"; // not "progress": that is the progress bar's class
   return (
     <section id={`day-${day.id}`} className={"card daycard " + state} aria-labelledby={`dh-${day.id}`}>
       <div className="daycard-top">
