@@ -146,15 +146,20 @@ const WEEK1: DayNotes[] = [
 ];
 
 import { WEEK2 } from "./studyNotes2";
+import { DEVOPS_NOTES } from "./devops";
 
-/** Study notes by week number. A new week is one more entry here. */
-export const STUDY_NOTES: Record<number, DayNotes[]> = { 1: WEEK1, 2: WEEK2 };
+/** Which program's notes: the program name decides ("DevOps ..." gets the DevOps notes, anything else the FDE notes). */
+export type Track = "fde" | "devops";
+export const trackOf = (programName: string): Track => (/devops/i.test(programName) ? "devops" : "fde");
 
-export const notesFor = (week: number, day: number): DayNotes | undefined => STUDY_NOTES[week]?.find((d) => d.day === day);
+/** Study notes by track, then week number. A new week is one more entry here. */
+export const STUDY_NOTES: Record<Track, Record<number, DayNotes[]>> = { fde: { 1: WEEK1, 2: WEEK2 }, devops: DEVOPS_NOTES };
+
+export const notesFor = (track: Track, week: number, day: number): DayNotes | undefined => STUDY_NOTES[track][week]?.find((d) => d.day === day);
 
 const norm = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-/** The note for one topic line of a day: the same words (ignoring bullets and punctuation), else null. */
-export const noteForTopic = (week: number, day: number, topic: string): Note | undefined => {
+/** The note for one topic line of a day: the same words (ignoring bullets and punctuation), else undefined. */
+export const noteForTopic = (track: Track, week: number, day: number, topic: string): Note | undefined => {
   const n = norm(topic);
-  return notesFor(week, day)?.notes.find((x) => norm(x.topic) === n);
+  return notesFor(track, week, day)?.notes.find((x) => norm(x.topic) === n);
 };

@@ -19,6 +19,8 @@ What is new in V3: migrations 010 and 011, programs, roles, invites, plan, forms
 
 Reused later, and disclosed here: the Week 1 study notes (one note and set of reading links for each topic) come from the earlier tracker's `studyNotes.ts`, copied into this web app. The Week 2 notes were written new for this product (by an AI agent, then checked). The demo data uses the training sheets' wording for the plan and the week 1 sample answers.
 
+The DevOps program plan comes from the owner's own personal DevOps study plan (a shared document: four weeks of KodeKloud courses, topics and milestone labs), split into 30 study days for this product. The notes and links for its topics were written new for this product by AI agents; every topic line was matched to the plan and all 205 links were opened and answered HTTP 200 on 2026-11-23.
+
 The older features (assistants, practice lab, study notes, old reports) are still in the API code but are not part of the V3 web app. They are not part of this submission.
 
 The product was built by the owner working with AI agents (Claude Code); see [AI-DEVELOPMENT.md](AI-DEVELOPMENT.md).

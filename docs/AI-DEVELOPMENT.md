@@ -9,7 +9,7 @@ The product was built by one person (the owner) working with Claude Code and a s
 | Define | Turned the lead's review into requirements | The lead's walkthrough video was in Hindi. It was transcribed locally with Whisper, key frames were pulled with ffmpeg, and the agent wrote the requirements and the contract from the transcript and screenshots. |
 | Design | Planned data, API and screens before code | The `architect` agent split V3 into tickets. The contract [PROGRAMS-V3.md](https://github.com/shr1-live/fde-tracker-apiv2/blob/main/docs/PROGRAMS-V3.md) was written first so the API and web agents built against the same shapes. [DESIGN.md](https://github.com/shr1-live/fde-tracker-appv2/blob/main/DESIGN.md) was written before the restyle (tokens, components, accessibility rules). |
 | Build | Wrote the code in small, reviewable steps | `backend-dev` built migrations 010 and 011, services and endpoints. `frontend-dev` built the pages; `ui-ux-designer` critiqued screenshots. |
-| Test | Wrote and ran tests; drove the browser | `qa-engineer` wrote xUnit tests (274 pass) and ran Playwright + axe checks against a mocked API and the real API. |
+| Test | Wrote and ran tests; drove the browser | `qa-engineer` wrote xUnit tests (276 pass) and ran Playwright + axe checks against a mocked API and the real API. |
 | Review | Read-only review agents before every push | `code-reviewer` and `security-reviewer` read the diff. One review found that a coordinator invite could re-approve a rejected user. |
 | Split | Planned and carried out the move to two repositories | Agents planned the split. Scripts did the history-preserving move (subtree split and renames). The build and tests were run in both repositories to check it. |
 | Document | Wrote README, contract, design system and these docs | `docs-writer` keeps docs in plain English with limits stated. |
@@ -36,7 +36,7 @@ The agents only know what they are given. These files give them the same context
 | `backend-dev` | API, migrations, tests | Programs, status, reports, Excel, feed at scale (keyset paging, trigger counters) |
 | `frontend-dev` | Web pages and components | Every V3 page, lazy routes, feed features |
 | `ui-ux-designer` | Design and critique from screenshots | DESIGN.md, restyle, empty/error/loading states |
-| `qa-engineer` | xUnit, Playwright + axe, live checks | 274 API tests; 166 mocked browser checks; 106 real-API checks |
+| `qa-engineer` | xUnit, Playwright + axe, live checks | 276 API tests; 166 mocked browser checks; 106 real-API checks |
 | `code-reviewer` | Read-only diff review | Rejected-user finding; small fixes before push |
 | `security-reviewer` | Read-only security review | Auth, IDOR, injection, secrets, CSP checks |
 | `devops` | Vercel and Render setup, live checks | `vercel.json` (frontend repository) and `render.yaml` (backend repository); health and header checks |
@@ -85,5 +85,13 @@ Items 3, 4, 5, 7, 8 and 9 come from the working sessions and are not all visible
 | 11 | After adding plan weeks 1 and 2, five old tests failed. They had assumed a five-day plan. | The full run showed 8 failures; each cause was read before any test was changed. | Tests now expect ten days, and a new test checks both weeks. No test was weakened. |
 | 12 | The test project would not build: the API used a newer Npgsql than the test packages. | `dotnet test` stopped with a version error. | The test project pins the same Npgsql version. |
 | 13 | A link check reported most links as broken. | The URL list written on Windows had carriage returns in it. | The check strips them; all 58 links answered 200. |
+| 14 | A NUL character inside a status value made the save fail with a 500. The bug was older than this work. | A reviewer agent that had not seen my reasoning attacked the running API with odd input. | Such text is refused with a 400 before it reaches the database; test V19 covers it. |
+| 15 | A script of mine overwrote the test file with an empty file when it failed half way. | `git diff` showed 751 lines deleted. | The file was restored from git, and edits now go to a temporary file first and replace the original only after a successful write. |
+| 16 | On the live site, choosing the DevOps program from the program box at the top-left kept showing the FDE program. | The owner reported it. I reproduced it in a real (headless) browser by script: open the box, click Devops, read the address, which snapped back to the FDE feed. The box closes by going back one step in the browser history while the link was already navigating, so Back undid the switch. | The box now closes first and only then navigates, the same way the notification bell already did. The same script, run again, opens Devops, and 22 browser checks of the pages around it pass. |
+| 17 | The DevOps study document is written week by week; the product needs days, and a plan week holds at most 7 days while its last week has 9. | Reading the document against the database rule (`day` is 1 to 7). | The topics are split into days from the document's own bullets, and the capstone (study days 29 and 30) is week 5. The owner is told, so the split can be corrected. |
+| 18 | A topic-match check of mine said 47 of 102 DevOps topics had no note. | Two note files were laid out differently (a note spread over several lines), so my pattern missed them. | A looser pattern, kept in a script, confirmed all 102 match; the agents' own checks had been right. I do not change code on the strength of a check I have not first verified. |
+
+The DevOps notes were written by four sub-agents, one per week, in parallel. Each had to match the plan's topic lines word for word and open every link; the owner's side re-ran both checks over all four files (102 of 102 topics, 205 of 205 links answered HTTP 200).
 
 The week 2 study notes were written by a sub-agent. The owner's side checked them again: topic lines match the training sheet word for word, every link answers 200, and the build passes.
+

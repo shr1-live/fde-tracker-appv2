@@ -7,7 +7,7 @@ import { FormFields } from "../components/FormFields";
 import { Chip } from "../components/Chip";
 import { ProgramHeader } from "../components/ProgramHeader";
 import { Linkified } from "../components/Linkified";
-import { notesFor, noteForTopic } from "../data/studyNotes";
+import { notesFor, noteForTopic, trackOf } from "../data/studyNotes";
 import { Icon } from "../components/Icon";
 import { EmptyState, ErrorState, PageSkeleton } from "../components/States";
 import { useConfirm } from "../components/Confirm";
@@ -73,6 +73,7 @@ function DayCard({ program, day, mine, member, editing, onSaved, onEdit, onDelet
     try { const s = await status.saveDay(program.id, day.id, cleanValues(fields, values), done); onSaved(s); setCompleted(done); toast.success(done ? `Day ${day.day} saved and marked completed.` : `Day ${day.day} saved.`); }
     catch (e) { toast.error(errText(e)); } finally { setBusy(false); }
   };
+  const track = trackOf(program.name);
   const lines = day.topics_to_cover.split("\n").map((l) => l.replace(/^[\s•\-*]+/, "").trim()).filter(Boolean);
   const state = mine?.completed ? "done" : mine ? "inprogress" : "todo"; // not "progress": that is the progress bar's class
   return (
@@ -96,9 +97,9 @@ function DayCard({ program, day, mine, member, editing, onSaved, onEdit, onDelet
         <div className="daycard-body">
           <div className="day-section">
             <h4>Topics to cover</h4>
-            {notesFor(day.week, day.day)?.intro && <p className="topic-intro">{notesFor(day.week, day.day)?.intro}</p>}
+            {notesFor(track, day.week, day.day)?.intro && <p className="topic-intro">{notesFor(track, day.week, day.day)?.intro}</p>}
             <ul className="topics">{lines.map((l, i) => {
-              const n = noteForTopic(day.week, day.day, l);
+              const n = noteForTopic(track, day.week, day.day, l);
               return (
                 <li key={i}>
                   {n ? (
