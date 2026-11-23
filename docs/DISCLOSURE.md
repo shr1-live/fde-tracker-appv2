@@ -17,6 +17,8 @@ What was reused from the earlier tracker:
 
 What is new in V3: migrations 010 and 011, programs, roles, invites, plan, forms, status, reports, Excel exports, the feed as it is now, and the design system.
 
+Reused later, and disclosed here: the Week 1 study notes (one note and set of reading links for each topic) come from the earlier tracker's `studyNotes.ts`, copied into this web app. The Week 2 notes were written new for this product (by an AI agent, then checked). The demo data uses the training sheets' wording for the plan and the week 1 sample answers.
+
 The older features (assistants, practice lab, study notes, old reports) are still in the API code but are not part of the V3 web app. They are not part of this submission.
 
 The product was built by the owner working with AI agents (Claude Code); see [AI-DEVELOPMENT.md](AI-DEVELOPMENT.md).

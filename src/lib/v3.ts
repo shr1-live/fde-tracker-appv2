@@ -87,7 +87,7 @@ export const timesheet = {
   save: (id: string, week: string, tasks: TimeTask[], submit: boolean) => apiJson<Timesheet>("PUT", `${P(id)}/timesheet/${week}`, { tasks, submit }),
 };
 
-export type Notification = { id: string; kind: "daily_missed" | "week_submitted"; program_id: string | null; on_date: string | null; title: string; body: string; link: string | null; created_at: string; read: boolean };
+export type Notification = { id: string; kind: "daily_missed" | "week_submitted" | "status_updated" | "day_completed"; program_id: string | null; on_date: string | null; title: string; body: string; link: string | null; created_at: string; read: boolean };
 
 export const notifications = {
   list: () => apiJson<{ items: Notification[]; unread: number }>("GET", "/api/notifications"),
