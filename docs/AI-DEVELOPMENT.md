@@ -9,7 +9,7 @@ The product was built by one person (the owner) working with Claude Code and a s
 | Define | Turned the lead's review into requirements | The lead's walkthrough video was in Hindi. It was transcribed locally with Whisper, key frames were pulled with ffmpeg, and the agent wrote the requirements and the contract from the transcript and screenshots. |
 | Design | Planned data, API and screens before code | The `architect` agent split V3 into tickets. The contract [PROGRAMS-V3.md](https://github.com/shr1-live/fde-tracker-apiv2/blob/main/docs/PROGRAMS-V3.md) was written first so the API and web agents built against the same shapes. [DESIGN.md](https://github.com/shr1-live/fde-tracker-appv2/blob/main/DESIGN.md) was written before the restyle (tokens, components, accessibility rules). |
 | Build | Wrote the code in small, reviewable steps | `backend-dev` built migrations 010 and 011, services and endpoints. `frontend-dev` built the pages; `ui-ux-designer` critiqued screenshots. |
-| Test | Wrote and ran tests; drove the browser | `qa-engineer` wrote xUnit tests (274 pass) and ran Playwright + axe checks against a mocked API and the real API. |
+| Test | Wrote and ran tests; drove the browser | `qa-engineer` wrote xUnit tests (275 pass) and ran Playwright + axe checks against a mocked API and the real API. |
 | Review | Read-only review agents before every push | `code-reviewer` and `security-reviewer` read the diff. One review found that a coordinator invite could re-approve a rejected user. |
 | Split | Planned and carried out the move to two repositories | Agents planned the split. Scripts did the history-preserving move (subtree split and renames). The build and tests were run in both repositories to check it. |
 | Document | Wrote README, contract, design system and these docs | `docs-writer` keeps docs in plain English with limits stated. |
@@ -36,7 +36,7 @@ The agents only know what they are given. These files give them the same context
 | `backend-dev` | API, migrations, tests | Programs, status, reports, Excel, feed at scale (keyset paging, trigger counters) |
 | `frontend-dev` | Web pages and components | Every V3 page, lazy routes, feed features |
 | `ui-ux-designer` | Design and critique from screenshots | DESIGN.md, restyle, empty/error/loading states |
-| `qa-engineer` | xUnit, Playwright + axe, live checks | 274 API tests; 166 mocked browser checks; 106 real-API checks |
+| `qa-engineer` | xUnit, Playwright + axe, live checks | 275 API tests; 166 mocked browser checks; 106 real-API checks |
 | `code-reviewer` | Read-only diff review | Rejected-user finding; small fixes before push |
 | `security-reviewer` | Read-only security review | Auth, IDOR, injection, secrets, CSP checks |
 | `devops` | Vercel and Render setup, live checks | `vercel.json` (frontend repository) and `render.yaml` (backend repository); health and header checks |
@@ -87,3 +87,6 @@ Items 3, 4, 5, 7, 8 and 9 come from the working sessions and are not all visible
 | 13 | A link check reported most links as broken. | The URL list written on Windows had carriage returns in it. | The check strips them; all 58 links answered 200. |
 
 The week 2 study notes were written by a sub-agent. The owner's side checked them again: topic lines match the training sheet word for word, every link answers 200, and the build passes.
+
+| 14 | A NUL character inside a status value made the save fail with a 500. The bug was older than this work. | A reviewer agent that had not seen my reasoning attacked the running API with odd input. | Such text is refused with a 400 before it reaches the database; test V19 covers it. |
+| 15 | A script of mine overwrote the test file with an empty file when it failed half way. | `git diff` showed 751 lines deleted. | The file was restored from git, and edits now go to a temporary file first and replace the original only after a successful write. |
